@@ -42,6 +42,10 @@ Once the query was validated, I created the Scheduled Query Rule in:
 - **Group all alerts into a single Incident per 24 hours**
 - **Stop running query after alert is generated (24 hours)**
 
+
+![image](https://github.com/user-attachments/assets/857852c0-e1d1-4c28-b8e5-7b92ac776d70)
+
+
 ---
 
 ## Part 2: Trigger Alert to Create Incident
@@ -126,6 +130,11 @@ DeviceProcessEvents
 - Documented findings and lessons learned.
 - Updated policies to prevent recurrence, such as restricting PowerShell usage.
 - Closed out the incident within Sentinel as a **True Positive**.
+
+![image](https://github.com/user-attachments/assets/d9ad7290-5991-4a5a-8ec4-16202bb0a9c1)
+
+
+
 
 ### **Closure**
 - Reviewed and confirmed incident resolution.
